@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+
 from png2svg import _core
 
 

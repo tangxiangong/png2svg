@@ -1,6 +1,9 @@
+# type: ignore
+# pyright: reportAny = false
 import argparse
 import sys
 from pathlib import Path
+
 from png2svg import png2svg, png2svgs
 
 
@@ -12,32 +15,32 @@ def main():
 使用示例:
   # 转换单个 PNG 文件
   python main.py image.png
-  
+
   # 转换单个 PNG 文件并指定输出目录
   python main.py image.png -o output/
-  
+
   # 递归转换目录中的所有 PNG 文件
   python main.py -d images/
-  
+
   # 并行转换多个 PNG 文件
   python main.py file1.png file2.png file3.png
         """,
     )
 
-    parser.add_argument(
+    _ = parser.add_argument(
         "input",
         nargs="*",
         help="要转换的 PNG 文件，或使用 -d/--directory 时指定的目录",
     )
 
-    parser.add_argument(
+    _ = parser.add_argument(
         "-d",
         "--directory",
         action="store_true",
         help="递归转换指定目录中的所有 PNG 文件",
     )
 
-    parser.add_argument(
+    _ = parser.add_argument(
         "-o",
         "--output",
         type=str,
@@ -50,14 +53,12 @@ def main():
     # 验证输入
     if not args.input:
         parser.error("请指定至少一个输入文件或目录")
-        return 1
 
     try:
         if args.directory:
             # 目录转换模式
             if len(args.input) != 1:
                 parser.error("使用 -d/--directory 时请指定一个目录")
-                return 1
 
             directory = args.input[0]
             if not Path(directory).is_dir():

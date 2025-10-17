@@ -6,3 +6,4 @@ Cargo.lock
 .venv
 .ruff_cache/
 pics
+**/.DS_Store
