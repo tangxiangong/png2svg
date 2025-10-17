@@ -1,6 +1,9 @@
 [workspace]
 members = ["png2svg-core", "."]
 
+[workspace.dependencies]
+rayon = "1.11"
+
 [package]
 name = "png2svg"
 version = "0.1.0"
@@ -16,6 +19,5 @@ crate-type = ["cdylib"]
 # "abi3-py39" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.9
 pyo3 = { version = "0.26", features = ["extension-module", "abi3-py39"] }
 png2svg-core = { path = "./png2svg-core" }
-image = "0.25"
-rayon = "1"
-thiserror = "2"
+rayon = { workspace = true }
+num_cpus = "1"

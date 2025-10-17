@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 image = "0.25"
-rayon = "1.11"
+rayon = { workspace = true }
 thiserror = "2"
