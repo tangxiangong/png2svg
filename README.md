@@ -63,7 +63,7 @@ uv run main.py -h
 ### 环境要求
 
 - Rust 1.85+
-- uv
+- uv Python 3.9+
 
 ### 构建项目
 
@@ -99,6 +99,7 @@ png2svg/
 │   ├── core.py         # Python API
 │   └── _core.pyi       # 类型存根
 ├── main.py             # 命令行工具
+├── Cargo.toml          # Rust 项目配置
 └── pyproject.toml      # 项目配置
 ```
 
