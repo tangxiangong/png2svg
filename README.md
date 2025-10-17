@@ -72,8 +72,14 @@ uv run main.py -h
 # 安装依赖
 uv sync
 
+# 激活虚拟环境
+# Linux / macOS
+source .venv/bin/activate
+# Windows
+.venv\Scripts\activate
+
 # 构建 Rust 扩展
-maturin develop
+maturin build --release
 ```
 
 ### 项目结构
