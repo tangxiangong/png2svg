@@ -1,7 +1,7 @@
 [project]
 name = "png2svg"
 version = "0.1.0"
-description = "Add your description here"
+description = "PNG to SVG converter."
 readme = "README.md"
 authors = [{ name = "tangxiangong", email = "tangxiangong@gmail.com" }]
 requires-python = ">=3.9"
