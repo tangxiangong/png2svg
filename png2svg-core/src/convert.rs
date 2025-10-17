@@ -46,8 +46,37 @@ pub fn convert_parallel(
 
 /// Convert a single PNG file to SVG.
 pub fn convert(filename: impl AsRef<Path>, output_dir: Option<impl AsRef<Path>>) -> Result<()> {
-    let img = image::open(filename.as_ref())?.to_rgba8();
-    let svg = rgba_image_to_svg_contiguous(&img);
+    let img = image::open(filename.as_ref())?;
+
+    // Check if image has alpha channel
+    let svg = match img.color() {
+        image::ColorType::Rgba8
+        | image::ColorType::Rgba16
+        | image::ColorType::Rgba32F
+        | image::ColorType::La8
+        | image::ColorType::La16 => {
+            // Has alpha channel, convert to RGBA
+            let rgba_img = img.to_rgba8();
+            rgba_image_to_svg_contiguous(&rgba_img)
+        }
+        image::ColorType::Rgb8
+        | image::ColorType::Rgb16
+        | image::ColorType::Rgb32F
+        | image::ColorType::L8
+        | image::ColorType::L16 => {
+            // No alpha channel, convert to RGB
+            let rgb_img = img.to_rgb8();
+            rgb_image_to_svg_contiguous(&rgb_img)
+        }
+        _ => {
+            return Err(crate::Error::RgbaConversionError(format!(
+                "Unsupported color type: {:?} for file: {}",
+                img.color(),
+                filename.as_ref().display()
+            )));
+        }
+    };
+
     let input_path = filename.as_ref().to_path_buf();
     let output_path = if let Some(dir) = output_dir {
         dir.as_ref()
@@ -179,6 +208,105 @@ fn rgba_image_to_svg_contiguous(img: &RgbaImage) -> String {
                 color[1],
                 color[2],
                 color[3] as f32 / 255.0
+            ));
+        }
+    }
+
+    svg.push_str("</svg>\n");
+    svg
+}
+
+fn rgb_image_to_svg_contiguous(img: &image::RgbImage) -> String {
+    let (width, height) = (img.width() as i32, img.height() as i32);
+    let adjacent = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+    let mut visited = vec![vec![false; height as usize]; width as usize];
+    let mut color_pixel_lists: HashMap<image::Rgb<u8>, Vec<HashSet<Point>>> = HashMap::new();
+
+    for x in 0..width as u32 {
+        for y in 0..height as u32 {
+            if visited[x as usize][y as usize] {
+                continue;
+            }
+            let rgb = img.get_pixel(x, y);
+            let mut piece = HashSet::new();
+            let mut queue = VecDeque::new();
+            queue.push_back((x as i32, y as i32));
+            visited[x as usize][y as usize] = true;
+
+            while let Some(here) = queue.pop_front() {
+                for offset in &adjacent {
+                    let neighbour = (here.0 + offset.0, here.1 + offset.1);
+                    if neighbour.0 < 0
+                        || neighbour.0 >= width
+                        || neighbour.1 < 0
+                        || neighbour.1 >= height
+                    {
+                        continue;
+                    }
+                    if visited[neighbour.0 as usize][neighbour.1 as usize] {
+                        continue;
+                    }
+                    let neighbour_rgb = img.get_pixel(neighbour.0 as u32, neighbour.1 as u32);
+                    if neighbour_rgb != rgb {
+                        continue;
+                    }
+                    queue.push_back(neighbour);
+                    visited[neighbour.0 as usize][neighbour.1 as usize] = true;
+                }
+                piece.insert(here);
+            }
+
+            color_pixel_lists.entry(*rgb).or_default().push(piece);
+        }
+    }
+
+    let edges = [
+        ((-1, 0), ((0, 0), (0, 1))),
+        ((0, 1), ((0, 1), (1, 1))),
+        ((1, 0), ((1, 1), (1, 0))),
+        ((0, -1), ((1, 0), (0, 0))),
+    ];
+
+    let mut color_edge_lists: HashMap<image::Rgb<u8>, Vec<HashSet<Edge>>> = HashMap::new();
+
+    for (rgb, pieces) in &color_pixel_lists {
+        for piece_pixel_list in pieces {
+            let mut edge_set = HashSet::new();
+            for &coord in piece_pixel_list {
+                for &(offset, (start_offset, end_offset)) in &edges {
+                    let neighbour = (coord.0 + offset.0, coord.1 + offset.1);
+                    let start = (coord.0 + start_offset.0, coord.1 + start_offset.1);
+                    let end = (coord.0 + end_offset.0, coord.1 + end_offset.1);
+                    let edge = (start, end);
+                    if !piece_pixel_list.contains(&neighbour) {
+                        edge_set.insert(edge);
+                    }
+                }
+            }
+            color_edge_lists.entry(*rgb).or_default().push(edge_set);
+        }
+    }
+
+    let mut svg = String::new();
+    svg.push_str(&svg_header(img.width(), img.height()));
+
+    for (color, pieces) in &color_edge_lists {
+        for edge_set in pieces {
+            let shape = joined_edges(edge_set, false);
+            svg.push_str(r#" <path d=""#);
+            for sub_shape in shape {
+                if let Some(&start) = sub_shape.first() {
+                    svg.push_str(&format!(" M {},{}", start.0, start.1));
+                    for &point in &sub_shape[1..] {
+                        svg.push_str(&format!(" L {},{}", point.0, point.1));
+                    }
+                    svg.push_str(" Z");
+                }
+            }
+            // RGB images are fully opaque (opacity = 1.0)
+            svg.push_str(&format!(
+                r#"" style="fill:rgb({},{},{}); fill-opacity:1.0; stroke:none;" />"#,
+                color[0], color[1], color[2]
             ));
         }
     }
