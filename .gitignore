@@ -1,0 +1,8 @@
+/target
+Cargo.lock
+**/*.so
+**/*.pyd
+**/uv.lock
+.venv
+.ruff_cache/
+pics

@@ -1,0 +1,21 @@
+[workspace]
+members = ["png2svg-core", "."]
+
+[package]
+name = "png2svg"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "_core"
+# "cdylib" is necessary to produce a shared library for Python to import from.
+crate-type = ["cdylib"]
+
+[dependencies]
+# "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
+# "abi3-py39" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.9
+pyo3 = { version = "0.26", features = ["extension-module", "abi3-py39"] }
+png2svg-core = { path = "./png2svg-core" }
+image = "0.25"
+rayon = "1"
+thiserror = "2"
