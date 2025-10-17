@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 println!("Converting {} to {}", input_path, output_path);
 
-                convert(input_path).unwrap();
+                convert(input_path, None::<String>).unwrap();
             }
         });
     Ok(())

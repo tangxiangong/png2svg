@@ -11,9 +11,12 @@ use std::{
 type Point = (i32, i32);
 type Edge = (Point, Point);
 
-pub fn convert_directory(dirpath: impl AsRef<Path>) -> Result<()> {
+pub fn convert_directory(
+    dirpath: impl AsRef<Path>,
+    output_dir: Option<impl AsRef<Path> + Send + Sync>,
+) -> Result<()> {
     let filenames = collect_png_files(dirpath.as_ref())?;
-    convert_parallel(filenames)
+    convert_parallel(filenames, output_dir)
 }
 
 /// Recursively collect all PNG files from a directory
@@ -32,22 +35,34 @@ fn collect_png_files(dir: &Path) -> Result<Vec<PathBuf>> {
 }
 
 /// Convert multiple PNG files to SVG in parallel.
-pub fn convert_parallel(filenames: Vec<impl AsRef<Path> + Send + 'static>) -> Result<()> {
+pub fn convert_parallel(
+    filenames: Vec<impl AsRef<Path> + Send + 'static>,
+    output_dir: Option<impl AsRef<Path> + Send + Sync>,
+) -> Result<()> {
     filenames
         .into_par_iter()
-        .try_for_each(|filename| convert(filename))
+        .try_for_each(|filename| convert(filename, output_dir.as_ref()))
 }
 
 /// Convert a single PNG file to SVG.
-pub fn convert(filename: impl AsRef<Path>) -> Result<()> {
+pub fn convert(filename: impl AsRef<Path>, output_dir: Option<impl AsRef<Path>>) -> Result<()> {
     let img = image::open(filename.as_ref())?.to_rgba8();
     let svg = rgba_image_to_svg_contiguous(&img);
     let input_path = filename.as_ref().to_path_buf();
-    let output_path = input_path
-        .with_extension("svg")
-        .to_str()
-        .unwrap()
-        .to_string();
+    let output_path = if let Some(dir) = output_dir {
+        dir.as_ref()
+            .join(input_path.file_stem().unwrap())
+            .with_extension("svg")
+            .to_str()
+            .unwrap()
+            .to_string()
+    } else {
+        input_path
+            .with_extension("svg")
+            .to_str()
+            .unwrap()
+            .to_string()
+    };
 
     let mut file = File::create(&output_path)?;
     file.write_all(svg.as_bytes())?;
