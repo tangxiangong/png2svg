@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{Error, Result};
 use image::{Rgba, RgbaImage};
 use rayon::prelude::*;
 use std::{
@@ -69,7 +69,7 @@ pub fn convert(filename: impl AsRef<Path>, output_dir: Option<impl AsRef<Path>>)
             rgb_image_to_svg_contiguous(&rgb_img)
         }
         _ => {
-            return Err(crate::Error::RgbaConversionError(format!(
+            return Err(Error::RgbaConversionError(format!(
                 "Unsupported color type: {:?} for file: {}",
                 img.color(),
                 filename.as_ref().display()
