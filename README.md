@@ -1,6 +1,6 @@
 # PNG2SVG
 
-## 🚀 快速开始
+## 快速开始
 
 ### Python API
 
@@ -39,7 +39,7 @@ uv run main.py file1.png file2.png file3.png
 uv run main.py -h
 ```
 
-## 📚 API 文档
+## API 文档
 
 ### `png2svg(filename, directory=False, output_dir=None)`
 
@@ -58,13 +58,12 @@ uv run main.py -h
 - `filenames` (list[str]): 要转换的 PNG 文件路径列表
 - `output_dir` (Optional[str]): SVG 文件的输出目录。如果为 `None`，则输出到与输入相同的位置
 
-## 🔧 开发
+## 开发
 
 ### 环境要求
 
 - Rust 1.85+
-- Python 3.9+
-- uv 或 pip
+- uv
 
 ### 构建项目
 
