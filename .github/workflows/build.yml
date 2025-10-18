@@ -24,10 +24,6 @@ jobs:
           - os: ubuntu-latest
             target: x86_64
             platform: linux
-          # macOS x86_64
-          - os: macos-latest
-            target: x86_64
-            platform: darwin
           # macOS aarch64 (Apple Silicon)
           - os: macos-latest
             target: aarch64
@@ -51,7 +47,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'linux' && matrix.target == 'x86_64' && 'x86_64-unknown-linux-gnu' || matrix.platform == 'linux' && matrix.target == 'aarch64' && 'aarch64-unknown-linux-gnu' || matrix.platform == 'darwin' && matrix.target == 'x86_64' && 'x86_64-apple-darwin' || matrix.platform == 'darwin' && matrix.target == 'aarch64' && 'aarch64-apple-darwin' || matrix.platform == 'windows' && 'x86_64-pc-windows-msvc' || '' }}
+          targets: ${{ matrix.platform == 'linux' && matrix.target == 'x86_64' && 'x86_64-unknown-linux-gnu' || matrix.platform == 'darwin' && matrix.target == 'aarch64' && 'aarch64-apple-darwin' || matrix.platform == 'windows' && 'x86_64-pc-windows-msvc' || '' }}
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
