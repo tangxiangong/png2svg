@@ -5,19 +5,19 @@
 ### Python API
 
 ```python
-from png2svg import png2svg, png2svgs
+from png2svg import convert
 
 # 转换单个文件
-png2svg("input.png")
+convert("input.png")
 
 # 转换单个文件并指定输出目录
-png2svg("input.png", output_dir="output/")
+convert("input.png", output_dir="output/")
 
 # 递归转换目录中的所有 PNG 文件
-png2svg("images/", directory=True, output_dir="svg_output/")
+convert("images/", directory=True, output_dir="svg_output/")
 
 # 并行转换多个文件
-png2svgs(["file1.png", "file2.png", "file3.png"], output_dir="output/")
+convert(["file1.png", "file2.png", "file3.png"], output_dir="output/")
 ```
 
 ### 命令行工具
@@ -41,21 +41,13 @@ uv run main.py -h
 
 ## API 文档
 
-### `png2svg(filename, directory=False, output_dir=None)`
+### `convert(filename, directory=False, output_dir=None)`
 
 将 PNG 图像或目录转换为 SVG 格式。
 
 **参数：**
-- `filename` (str): PNG 文件的路径，或当 `directory=True` 时为目录路径
+- `filename` (Union[str, list[str]]): PNG 文件的路径(列表)，或当 `directory=True` 时为目录路径
 - `directory` (bool): 如果为 `True`，则递归转换指定目录中的所有 PNG 文件。默认为 `False`
-- `output_dir` (Optional[str]): SVG 文件的输出目录。如果为 `None`，则输出到与输入相同的位置
-
-### `png2svgs(filenames, output_dir=None)`
-
-并行转换多个 PNG 图像为 SVG 格式。
-
-**参数：**
-- `filenames` (list[str]): 要转换的 PNG 文件路径列表
 - `output_dir` (Optional[str]): SVG 文件的输出目录。如果为 `None`，则输出到与输入相同的位置
 
 ## 开发
@@ -95,8 +87,7 @@ png2svg/
 │   ├── lib.rs          # PyO3 模块
 │   └── ffi.rs          # FFI 函数
 ├── png2svg/            # Python 包
-│   ├── __init__.py
-│   ├── core.py         # Python API
+│   ├── __init__.py     # Python API
 │   └── _core.pyi       # 类型存根
 ├── main.py             # 命令行工具
 ├── Cargo.toml          # Rust 项目配置

@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from png2svg import png2svg, png2svgs
+from png2svg import convert
 
 
 def main():
@@ -66,7 +66,7 @@ def main():
                 return 1
 
             print(f"正在递归转换 '{directory}' 中的所有 PNG 文件...")
-            png2svg(directory, directory=True, output_dir=args.output)
+            convert(directory, directory=True, output_dir=args.output)
             print("✓ 目录转换完成！")
 
         elif len(args.input) == 1:
@@ -77,7 +77,7 @@ def main():
                 return 1
 
             print(f"正在转换 '{filename}'...")
-            png2svg(filename, output_dir=args.output)
+            convert(filename, output_dir=args.output)
             print("✓ 转换完成！")
 
         else:
@@ -88,7 +88,7 @@ def main():
                     return 1
 
             print(f"正在并行转换 {len(args.input)} 个文件...")
-            png2svgs(args.input, output_dir=args.output)
+            convert(args.input, output_dir=args.output)
             print("✓ 所有转换完成！")
 
         return 0
