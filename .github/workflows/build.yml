@@ -5,6 +5,9 @@ on:
     types: [created]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
@@ -26,11 +29,11 @@ jobs:
             target: aarch64
             platform: linux
           # macOS x86_64
-          - os: macos-13
+          - os: macos-latest
             target: x86_64
             platform: darwin
           # macOS aarch64 (Apple Silicon)
-          - os: macos-14
+          - os: macos-latest
             target: aarch64
             platform: darwin
           # Windows x86_64
@@ -47,7 +50,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.9"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
