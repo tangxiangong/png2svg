@@ -24,10 +24,6 @@ jobs:
           - os: ubuntu-latest
             target: x86_64
             platform: linux
-          # Linux aarch64
-          - os: ubuntu-latest
-            target: aarch64
-            platform: linux
           # macOS x86_64
           - os: macos-latest
             target: x86_64
@@ -70,15 +66,9 @@ jobs:
       - name: Install maturin
         run: uv tool install maturin
 
-      - name: Set up QEMU (for Linux aarch64)
-        if: matrix.platform == 'linux' && matrix.target == 'aarch64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
       - name: Build wheels
         run: |
-          uvx maturin build --release --out dist --find-interpreter ${{ matrix.platform == 'linux' && matrix.target == 'aarch64' && '--target aarch64-unknown-linux-gnu' || matrix.platform == 'linux' && matrix.target == 'x86_64' && '--target x86_64-unknown-linux-gnu' || '' }}
+          uvx maturin build --release --out dist --find-interpreter ${{ matrix.platform == 'linux' && matrix.target == 'x86_64' && '--target x86_64-unknown-linux-gnu' || '' }}
 
       - name: Upload wheels as artifacts
         uses: actions/upload-artifact@v4
@@ -107,7 +97,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.9"
 
       - name: Install UV
         uses: astral-sh/setup-uv@v4
@@ -132,5 +122,102 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-executable:
+    name: Build executable on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            platform: linux
+            target: x86_64-unknown-linux-gnu
+            ext: ""
+            name: png2svg-linux-x64
+          # macOS x86_64
+          - os: macos-13
+            platform: macos
+            target: x86_64-apple-darwin
+            ext: ""
+            name: png2svg-macos-x64
+          # macOS ARM64 (Apple Silicon)
+          - os: macos-latest
+            platform: macos
+            target: aarch64-apple-darwin
+            ext: ""
+            name: png2svg-macos-arm64
+          # Windows x86_64
+          - os: windows-latest
+            platform: windows
+            target: x86_64-pc-windows-msvc
+            ext: ".exe"
+            name: png2svg-windows-x64.exe
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-cache-${{ matrix.platform }}-exe"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install maturin and build wheel
+        run: |
+          uv tool install maturin
+          uvx maturin build --release --out dist --target ${{ matrix.target }}
+
+      - name: Install package and PyInstaller
+        run: |
+          uv venv
+          uv pip install dist/*.whl
+          uv pip install pyinstaller
+
+      - name: Build executable with PyInstaller (Linux/macOS)
+        if: matrix.platform == 'linux' || matrix.platform == 'macos'
+        run: |
+          source .venv/bin/activate
+          pyinstaller --onefile --name ${{ matrix.name }} main.py
+          chmod +x dist/${{ matrix.name }}
+
+      - name: Build executable with PyInstaller (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          .venv\Scripts\activate
+          pyinstaller --onefile --name png2svg-windows-x64 main.py
+
+      - name: Upload executable as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-${{ matrix.platform }}
+          path: dist/${{ matrix.name }}
+          if-no-files-found: error
+
+      - name: Upload executable to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/${{ matrix.name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
