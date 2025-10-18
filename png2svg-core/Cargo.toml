@@ -11,3 +11,5 @@ image = { version = "0.25", default-features = false, features = [
 ] }
 rayon = { workspace = true }
 thiserror = "2"
+vtracer = "0.6"
+visioncortex = "0.8"
