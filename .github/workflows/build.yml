@@ -138,12 +138,6 @@ jobs:
             target: x86_64-unknown-linux-gnu
             ext: ""
             name: png2svg-linux-x64
-          # macOS x86_64
-          - os: macos-13
-            platform: macos
-            target: x86_64-apple-darwin
-            ext: ""
-            name: png2svg-macos-x64
           # macOS ARM64 (Apple Silicon)
           - os: macos-latest
             platform: macos
